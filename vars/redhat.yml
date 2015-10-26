@@ -2,4 +2,6 @@
 
 postgresql_pgdata_default: /var/lib/pgsql/{{ postgresql_version }}/data
 postgresql_conf_dir_default: /var/lib/pgsql/{{ postgresql_version }}/data
+postgresql_share_dir: /usr/pgsql-{{ postgresql_version }}/share
+postgresql_conf_sample_file: "{{ postgresql_share_dir }}/postgresql.conf.sample"
 postgresql_service_name: postgresql-{{ postgresql_version }}

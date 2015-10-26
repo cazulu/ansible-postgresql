@@ -21,6 +21,10 @@
   set_fact: postgresql_conf_dir={{ postgresql_conf_dir_default }}
   when: postgresql_conf_dir is not defined
 
+- name: Set postgresql.conf fact
+  set_fact: postgresql_conf_file={{ postgresql_conf_dir }}/postgresql.conf
+  when: postgresql_conf_file is not defined
+
 # Needs postgresql_pgdata_dir set
 - include: redhat.yml
   when: ansible_os_family == "RedHat"
@@ -29,10 +33,9 @@
   file: path={{ postgresql_conf_dir }}/conf.d state=directory owner=postgres group=postgres
 
 - name: Set conf.d include in postgresql.conf
-  lineinfile: line="include_dir 'conf.d'" dest={{ postgresql_conf_dir }}/postgresql.conf backup=yes
+  lineinfile: line="include_dir 'conf.d'" dest={{ postgresql_conf_file }} backup=yes
   notify: Reload PostgreSQL
   when: "{{ postgresql_version | version_compare('9.3', '>=') }}"
-
 
 - name: Include 25ansible_postgresql.conf in postgresql.conf
   lineinfile: line="include 'conf.d/25ansible_postgresql.conf'" dest={{ postgresql_conf_dir }}/postgresql.conf backup=yes

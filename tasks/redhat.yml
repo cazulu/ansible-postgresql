@@ -31,10 +31,24 @@
   register: pgdata_stat
   failed_when: false
 
+- name: Add workaround to postgresql init script to prevent it from crashing if postgres' user has a nologin shell
+  replace: >
+    dest=/etc/init.d/postgresql-{{ postgresql_version }}
+    regexp='^(\s*)(?:(SU=)(su|runuser))(\s*)$'
+    replace='\1\2"\3 -s /bin/bash"\4'
+    backup=yes
+
 - name: Initialize database (RedHat < 7)
   command: /sbin/service postgresql-{{ postgresql_version }} initdb
   when: ansible_distribution_major_version | int < 7 and (pgdata_stat.stat.isdir is not defined or not pgdata_stat.stat.isdir)
+  register: command_result
+  failed_when: "'FAILED' in command_result.stdout"
 
 - name: Initialize database (RedHat >= 7)
   command: /usr/pgsql-{{ postgresql_version }}/bin/postgresql{{ postgresql_version | replace('.', '') }}-setup initdb
   when: ansible_distribution_major_version | int >= 7 and (pgdata_stat.stat.isdir is not defined or not pgdata_stat.stat.isdir)
+
+- name: Ensure postgresql.conf exists
+  command: >
+    creates={{ postgresql_conf_file }}
+    cp "{{ postgresql_conf_sample_file }}" "{{ postgresql_conf_file }}"
